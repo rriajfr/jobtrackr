@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">✨ Simulated AI Skill Matcher</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Paste the Job Description here:</label>
+                        <textarea name="job_description" class="form-control" rows="6" placeholder="e.g., We need a developer with Python, Django, and SQL experience.">{{ job_desc }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Analyze Match</button>
+                </form>
+
+                {% if result %}
+                <hr>
+                <h4 class="mt-4">Analysis Result</h4>
+                <div class="progress mb-3" style="height: 25px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ result.score }}%;" aria-valuenow="{{ result.score }}" aria-valuemin="0" aria-valuemax="100">
+                        Match Score: {{ result.score }}%
+                    </div>
+                </div>
+                <p><strong>Skills Found:</strong> <span class="text-success">{{ result.found }}</span></p>
+                <p><strong>Missing Skills to Prepare:</strong> <span class="text-danger">{{ result.missing }}</span></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Kanban Board</h2>
+    <a href="{% url 'application_add' %}" class="btn btn-primary">+ Add New Application</a>
+</div>
+
+<!-- CSRF Token for AJAX requests -->
+{% csrf_token %}
+
+<div class="row g-3">
+    <!-- Column: Wishlist -->
+    <div class="col-md">
+        <div class="card bg-light shadow-sm">
+            <div class="card-header bg-secondary text-white text-center fw-bold">Wishlist</div>
+            <div class="card-body kanban-column" id="wishlist" style="min-height: 500px;">
+                {% for app in applications %}
+                    {% if app.status == 'wishlist' %}
+                        <div class="card mb-2 shadow-sm kanban-card" data-id="{{ app.id }}">
+                            <div class="card-body p-2">
+                                <h6 class="mb-0">{{ app.company }}</h6>
+                                <small class="text-muted">{{ app.role }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Column: Applied -->
+    <div class="col-md">
+        <div class="card bg-light shadow-sm">
+            <div class="card-header bg-primary text-white text-center fw-bold">Applied</div>
+            <div class="card-body kanban-column" id="applied" style="min-height: 500px;">
+                {% for app in applications %}
+                    {% if app.status == 'applied' %}
+                        <div class="card mb-2 shadow-sm kanban-card" data-id="{{ app.id }}">
+                            <div class="card-body p-2">
+                                <h6 class="mb-0">{{ app.company }}</h6>
+                                <small class="text-muted">{{ app.role }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Column: Interview -->
+    <div class="col-md">
+        <div class="card bg-light shadow-sm">
+            <div class="card-header bg-warning text-dark text-center fw-bold">Interview</div>
+            <div class="card-body kanban-column" id="interview" style="min-height: 500px;">
+                {% for app in applications %}
+                    {% if app.status == 'interview' %}
+                        <div class="card mb-2 shadow-sm kanban-card" data-id="{{ app.id }}">
+                            <div class="card-body p-2">
+                                <h6 class="mb-0">{{ app.company }}</h6>
+                                <small class="text-muted">{{ app.role }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Column: Offer -->
+    <div class="col-md">
+        <div class="card bg-light shadow-sm">
+            <div class="card-header bg-success text-white text-center fw-bold">Offer</div>
+            <div class="card-body kanban-column" id="offer" style="min-height: 500px;">
+                {% for app in applications %}
+                    {% if app.status == 'offer' %}
+                        <div class="card mb-2 shadow-sm kanban-card" data-id="{{ app.id }}">
+                            <div class="card-body p-2">
+                                <h6 class="mb-0">{{ app.company }}</h6>
+                                <small class="text-muted">{{ app.role }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Column: Rejected -->
+    <div class="col-md">
+        <div class="card bg-light shadow-sm">
+            <div class="card-header bg-danger text-white text-center fw-bold">Rejected</div>
+            <div class="card-body kanban-column" id="rejected" style="min-height: 500px;">
+                {% for app in applications %}
+                    {% if app.status == 'rejected' %}
+                        <div class="card mb-2 shadow-sm kanban-card" data-id="{{ app.id }}">
+                            <div class="card-body p-2">
+                                <h6 class="mb-0">{{ app.company }}</h6>
+                                <small class="text-muted">{{ app.role }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SortableJS Library for Drag and Drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+    // Select all columns
+    const columns = document.querySelectorAll('.kanban-column');
+
+    columns.forEach(column => {
+        new Sortable(column, {
+            group: 'shared', // Allows dragging between columns
+            animation: 150,
+            ghostClass: 'bg-info', // Color of the card while dragging
+            onEnd: function (evt) {
+                const card = evt.item;
+                const appId = card.getAttribute('data-id');
+                const newStatus = evt.to.id; // The ID of the new column
+                
+                // Send AJAX request to Django
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                fetch('/applications/update-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        'app_id': appId,
+                        'status': newStatus
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('Failed to update status. Please refresh.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred.');
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

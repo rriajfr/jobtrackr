@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Applications</h2>
+    <a href="{% url 'application_add' %}" class="btn btn-success">+ Add New</a>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="q" class="form-control" placeholder="Search by company or role..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="wishlist" {% if status_filter == 'wishlist' %}selected{% endif %}>Wishlist</option>
+                    <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+                    <option value="interview" {% if status_filter == 'interview' %}selected{% endif %}>Interview</option>
+                    <option value="offer" {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Applications Table -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Company</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Applied On</th>
+                    <th>Follow-up</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>
+                        <a href="{% url 'application_detail' app.id %}" class="text-decoration-none fw-bold">
+                            {{ app.company }}
+                        </a>
+                    </td>
+                    <td>{{ app.role }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if app.status == 'offer' %}bg-success
+                            {% elif app.status == 'rejected' %}bg-danger
+                            {% elif app.status == 'interview' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ app.date_applied }}</td>
+                    <td>
+                        {% if app.follow_up_date %}
+                            {% now "Y-m-d" as today %}
+                            {% if app.follow_up_date|date:"Y-m-d" < today and app.status != 'offer' and app.status != 'rejected' %}
+                                <span class="badge bg-danger">Overdue! ({{ app.follow_up_date }})</span>
+                            {% else %}
+                                <span class="text-muted">{{ app.follow_up_date }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'application_edit' app.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'application_delete' app.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">No applications found. Try adjusting your search or add a new one!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

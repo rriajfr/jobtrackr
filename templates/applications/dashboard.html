@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard</h2>
+    <a href="{% url 'application_add' %}" class="btn btn-primary">+ Add New Application</a>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Total Applications</h6>
+                <h1 class="display-4 fw-bold">{{ total_apps }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-dark bg-warning shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Interviews</h6>
+                <h1 class="display-4 fw-bold">{{ interviews }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Offers</h6>
+                <h1 class="display-4 fw-bold">{{ offers }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Rejections</h6>
+                <h1 class="display-4 fw-bold">{{ rejections }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Status Breakdown</div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Applications per Month</div>
+            <div class="card-body">
+                <canvas id="monthChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Applications Section -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Applications</h5>
+        <a href="{% url 'application_list' %}" class="btn btn-sm btn-outline-light">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for app in recent_apps %}
+            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <h6 class="mb-1"><strong>{{ app.company }}</strong> - {{ app.role }}</h6>
+                    <small class="text-muted">Applied on {{ app.date_applied }}</small>
+                </div>
+                <span class="badge fs-6
+                    {% if app.status == 'offer' %}bg-success
+                    {% elif app.status == 'rejected' %}bg-danger
+                    {% elif app.status == 'interview' %}bg-warning text-dark
+                    {% else %}bg-secondary{% endif %}">
+                    {{ app.get_status_display }}
+                </span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-center py-5">
+                <p class="text-muted mb-0">No recent applications. Start tracking your job hunt!</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // 1. Status Doughnut Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    const statusLabels = {{ status_labels|safe }};
+    const statusData = {{ status_data|safe }};
+
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusData,
+                backgroundColor: ['#0d6efd', '#6c757d', '#ffc107', '#198754', '#dc3545'], // Blue, Gray, Yellow, Green, Red
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 2. Applications per Month Bar Chart
+    const monthCtx = document.getElementById('monthChart').getContext('2d');
+    const monthLabels = {{ month_labels|safe }};
+    const monthData = {{ month_data|safe }};
+
+    new Chart(monthCtx, {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Applications',
+                data: monthData,
+                backgroundColor: '#0d6efd',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+</script>
+{% endblock %}
